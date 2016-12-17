@@ -1,0 +1,7 @@
+{
+  "GCLOUD_PROJECT": "kubehack",
+  "DATA_BACKEND": "mongodb",
+  "MONGO_URL": "mongodb://winedb:winedb@ds131878.mlab.com:31878/winedb",
+  "MONGO_COLLECTION": "books"
+}
+

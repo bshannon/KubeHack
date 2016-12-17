@@ -1,0 +1,49 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: winelist
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: winelist
+    spec:
+      containers:
+        - image: gcr.io/kubehack/winelist:v5
+          name: winelist
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          env:
+            # These secrets are required to start the pod.
+            # [START cloudsql_secrets]
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: cloudsql
+                  key: username
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cloudsql
+                  key: password
+            # [END cloudsql_secrets]
+        - image: b.gcr.io/cloudsql-docker/gce-proxy:1.05
+          name: cloudsql-proxy
+          command: ["/cloud_sql_proxy", "--dir=/cloudsql",
+                    "-instances=kubehack:us-central1:winedb=tcp:3306",
+                    "-credential_file=/secrets/cloudsql/KubeHack-key.json"]
+          volumeMounts:
+            - name: cloudsql-oauth-credentials
+              mountPath: /secrets/cloudsql
+              readOnly: true
+            - name: ssl-certs
+              mountPath: /etc/ssl/certs
+      volumes:
+        - name: cloudsql-oauth-credentials
+          secret:
+            secretName: cloudsql-oauth-credentials
+        - name: ssl-certs
+          hostPath:
+            path: /etc/ssl/certs
